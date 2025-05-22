@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Owzthat Cricket Dice Game by Lapis Yam (Fixed & AI)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto+Slab:wght@700&family=Roboto&display=swap');
+  body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background: radial-gradient(circle at center, #020911 0%, #001d33 98%);
+    color: #00faff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    padding: 16px;
+    overflow-x: hidden;
+  }
+  h1 {
+    font-family: 'Roboto Slab', serif;
+    font-weight: 700;
+    font-size: 3.2rem;
+    margin: 0;
+    color: #00e5ff;
+    letter-spacing: 0.1em;
+    text-shadow:
+      0 0 10px #00faff,
+      0 0 20px #00c9e0,
+      0 0 30px #00a0aa,
+      0 0 45px #00939388;
+    text-align: center;
+    user-select: text;
+  }
+  h2 {
+    margin: 6px 0 24px;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 1.25rem;
+    color: #33f9ffcc;
+    text-shadow: 0 0 8px #007d99;
+    user-select: text;
+  }
+
+  /* --- Mode Selection Screen --- */
+  #modeSelectionScreen {
+    background: #031c33cc;
+    border-radius: 24px;
+    padding: 32px 56px;
+    margin-bottom: 40px;
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    align-items: center;
+    box-shadow:
+      0 0 40px #008fbfbb,
+      inset 0 1px 30px #00252b;
+  }
+  #modeSelectionScreen h3 {
+    color: #00f7ff;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-shadow: 0 0 8px #00d9ffcc;
+    user-select: text;
+  }
+  .game-modes {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  button.game-mode-btn {
+    background: linear-gradient(135deg, #00ffffdd, #008f99cc);
+    border: none;
+    border-radius: 22px;
+    color: #001a20;
+    font-weight: 900;
+    font-size: 1.45rem;
+    padding: 20px 36px;
+    cursor: pointer;
+    box-shadow:
+      0 8px 0 #006666,
+      0 14px 16px #003f3fcc;
+    text-shadow: 0 1px 2px #003f3faa;
+    user-select: none;
+    flex: 1 0 170px;
+    transition: background 0.4s ease, box-shadow 0.3s ease;
+  }
+  button.game-mode-btn:hover {
+    background: linear-gradient(135deg, #33ffffee, #33aacfdd);
+    box-shadow:
+      0 5px 0 #006666,
+      0 10px 22px #002d2dcc;
+  }
+  button.game-mode-btn:active {
+    box-shadow: none;
+    transform: translateY(5px);
+  }
+
+  /* --- Toss Screen --- */
+  #tossScreen {
+    background: #022c43dd;
+    border-radius: 20px;
+    padding: 28px 40px;
+    width: 100%;
+    max-width: 600px;
+    display: none;
+    flex-direction: column;
+    gap: 26px;
+    align-items: center;
+    box-shadow:
+      0 0 55px #00aacccc,
+      inset 0 0 50px #004466cc;
+    user-select: none;
+  }
+  #tossScreen h3 {
+    font-weight: 900;
+    font-size: 2rem;
+    color: #00e0ff;
+    text-shadow: 0 0 12px #0088aa;
+  }
+  #tossResult {
+    font-size: 5rem;
+    color: #00ffffbb;
+    font-family: 'Orbitron', monospace;
+    text-shadow: 0 0 30px #00aaffcc;
+  }
+  #tossChoice {
+    display: flex;
+    gap: 24px;
+  }
+  button.toss-choice-btn {
+    padding: 18px 46px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    border-radius: 22px;
+    cursor: pointer;
+    background: linear-gradient(145deg, #00ffffbb, #009999dd);
+    box-shadow: 0 6px 0 #007777;
+    border: none;
+    color: #00443a;
+    text-shadow: 0 0 6px #005f5f;
+    user-select: none;
+    transition: background 0.3s ease, box-shadow 0.2s ease;
+  }
+  button.toss-choice-btn:hover {
+    background: linear-gradient(145deg, #33ffffee, #00ccccdd);
+    box-shadow: 0 3px 0 #005f5f;
+  }
+  button.toss-choice-btn:active {
+    box-shadow: none;
+    transform: translateY(5px);
+  }
+
+  /* --- Game Container --- */
+  .game-container {
+    background: #00121fdd;
+    border-radius: 26px;
+    padding: 32px 40px 40px;
+    width: 100%;
+    max-width: 720px;
+    box-shadow:
+      0 0 65px #00faffcc,
+      inset 0 0 70px #004455dd;
+    display: none;
+    flex-direction: column;
+    gap: 32px;
+    position: relative;
+  }
+
+  /* Player info boxes with avatars */
+  .scores {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .player-box {
+    flex: 1 1 45%;
+    background: #00394a;
+    border-radius: 24px;
+    padding: 18px 22px 24px;
+    box-shadow:
+      0 0 40px 6px #005567aa inset,
+      0 0 30px #00faffaa;
+    transition: background 0.4s ease;
+    text-align: center;
+    user-select: text;
+    color: #aafaff;
+    position: relative;
+  }
+  .active-player {
+    background: #00ffffee;
+    color: #003946;
+    box-shadow:
+      0 0 50px 9px #00faffdd inset,
+      0 0 45px #00faffdd;
+  }
+  .player-box div.title {
+    font-weight: 900;
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+    user-select: text;
+    letter-spacing: 0.04em;
+  }
+  .player-score {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.8rem;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    color: inherit;
+    margin-top: 4px;
+  }
+  .player-extra {
+    font-size: 1rem;
+    margin-top: 8px;
+    user-select: none;
+  }
+  .player-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 3px solid #00faffcc;
+    object-fit: cover;
+    position: absolute;
+    top: 14px;
+    left: calc(50% - 44px);
+    box-shadow: 0 0 18px #00faffbb;
+  }
+
+  /* Overs and wickets display */
+  .innings-info {
+    font-weight: 700;
+    font-size: 1.15rem;
+    user-select: text;
+    color: #b2faffcc;
+    text-shadow: 0 0 6px #008f9f;
+  }
+
+  /* Dice display futuristic */
+  .dice-area {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 7rem;
+    text-align: center;
+    color: #00e5ff;
+    letter-spacing: 0.25em;
+    text-shadow:
+      0 0 8px #00faff,
+      0 0 20px #00b2cc,
+      0 0 40px #0096bb,
+      0 0 50px #007eaa,
+      0 0 60px #005f7f;
+    user-select: none;
+    min-height: 130px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+  .rolling {
+    animation: diceRoll 1.2s linear infinite;
+  }
+  @keyframes diceRoll {
+    0%   { text-shadow: 0 0 8px #00faff, 0 0 20px #00b2cc; }
+    50%  { text-shadow: 0 0 25px #00ffff, 0 0 60px #00e5ff;}
+    100% { text-shadow: 0 0 8px #00faff, 0 0 20px #00b2cc; }
+  }
+
+  /* Log */
+  .log {
+    background: #002830dd;
+    color: #88faffcc;
+    font-family: monospace;
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 20px 26px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    box-shadow: inset 0 0 60px #00e5ff93;
+    line-height: 1.5;
+    user-select: text;
+    white-space: pre-line;
+  }
+
+  /* Buttons */
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 34px;
+    flex-wrap: wrap;
+  }
+  button.roll-btn, button.next-btn, button.restart-btn {
+    background: linear-gradient(120deg, #00faffcc, #008899cc);
+    border: none;
+    border-radius: 28px;
+    box-shadow: 0 8px 0 #004455;
+    cursor: pointer;
+    font-weight: 900;
+    font-size: 1.7rem;
+    color: #002022cc;
+    padding: 18px 48px;
+    user-select: none;
+    min-width: 160px;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 3px #004455cc;
+    transition: background 0.45s ease, box-shadow 0.3s ease, color 0.3s ease;
+  }
+  button.roll-btn:disabled {
+    background: #00445580;
+    box-shadow: none;
+    cursor: not-allowed;
+    color: #228899aa;
+  }
+  button.roll-btn:not(:disabled):hover,
+  button.next-btn:hover,
+  button.restart-btn:hover {
+    background: linear-gradient(120deg, #22ffffdd, #00b3ccdd);
+    box-shadow: 0 5px 0 #003f4f;
+    color: #001010cc;
+  }
+  button.roll-btn:active:not(:disabled),
+  button.next-btn:active,
+  button.restart-btn:active {
+    box-shadow: none;
+    transform: translateY(5px);
+  }
+  button.next-btn {
+    background: linear-gradient(135deg, #00e5ffbb, #008899cc);
+    min-width: 180px;
+  }
+  button.restart-btn {
+    background: linear-gradient(135deg, #ff0044cc, #aa0011cc);
+    min-width: 180px;
+    color: #ffeeeecc;
+    text-shadow: 0 0 9px #ff4455aa;
+    box-shadow: 0 8px 0 #770011;
+  }
+
+  @media (max-width: 620px) {
+    #modeSelectionScreen, #tossScreen, .game-container {
+      max-width: 100%;
+      padding: 20px;
+    }
+    .scores {
+      flex-direction: column;
+      gap: 14px;
+    }
+    .player-box {
+      flex-basis: 100%;
+    }
+    button.roll-btn, button.next-btn, button.restart-btn {
+      min-width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+<h1>Owzthat Cricket Dice Game</h1>
+<h2>by Lapis Yam</h2>
+
+<!-- Mode Select Screen -->
+<div id="modeSelectionScreen" role="region" aria-label="Select Match Mode">
+  <h3>Select Match Mode</h3>
+  <div class="game-modes">
+    <button class="game-mode-btn" data-mode="test" aria-label="Play Test Cricket Match">Test Match (2 Player)</button>
+    <button class="game-mode-btn" data-mode="odi" aria-label="Play One Day International Match">ODI (2 Player)</button>
+    <button class="game-mode-btn" data-mode="t20" aria-label="Play Twenty20 Match">T20 (2 Player)</button>
+    <button class="game-mode-btn" data-mode="computer" aria-label="Play versus computer AI">Play vs Computer (T20)</button>
+    <button class="game-mode-btn" data-mode="oneWicket" aria-label="Play 1 Wicket mode, sudden death">1 Wicket Mode (Sudden Death)</button>
+  </div>
+</div>
+
+<!-- Toss Screen -->
+<div id="tossScreen" role="region" aria-live="polite" aria-atomic="true" aria-label="Toss to decide batting order">
+  <h3>Tossing the coin...</h3>
+  <div id="tossResult" aria-live="assertive" aria-atomic="true" aria-label="Toss result"></div>
+  <div id="tossChoice" style="display:none;">
+    <button id="batFirstBtn" class="toss-choice-btn" aria-label="Choose to bat first">Bat First</button>
+    <button id="bowlFirstBtn" class="toss-choice-btn" aria-label="Choose to bowl first">Bowl First</button>
+  </div>
+</div>
+
+<!-- Game Container -->
+<div class="game-container" id="gameContainer" aria-live="polite" aria-atomic="true" role="main" tabindex="-1">
+  <div class="scores" role="region" aria-label="Player Scores and Status">
+    <section id="player1Box" class="player-box" aria-live="polite" aria-label="Player 1 status">
+      <img src="" alt="Player 1 Avatar" class="player-avatar" id="player1Avatar" />
+      <div class="title" id="player1Title">Player 1 (Batting)</div>
+      <div class="player-score" id="player1Score">0</div>
+      <div class="innings-info" id="player1Info">Wickets: 0 / 10  Overs: 0 / 20</div>
+    </section>
+    <section id="player2Box" class="player-box" aria-live="polite" aria-label="Player 2 status">
+      <img src="" alt="Player 2 Avatar" class="player-avatar" id="player2Avatar" />
+      <div class="title" id="player2Title">Player 2 (Bowling)</div>
+      <div class="player-score" id="player2Score">0</div>
+      <div class="innings-info" id="player2Info">Wickets: 0 / 10  Overs: 0 / 20</div>
+    </section>
+  </div>
+
+  <div class="dice-area" id="diceDisplay" aria-live="assertive" aria-atomic="true" role="img" aria-label="Dice roll result" tabindex="0">
+     Roll Dice to start
+  </div>
+
+  <div class="log" id="gameLog" tabindex="0" aria-live="polite" aria-atomic="false" aria-label="Game log">
+    Game log will appear here...
+  </div>
+
+  <div class="buttons" role="region" aria-label="Game controls">
+    <button id="rollDiceBtn" class="roll-btn" aria-label="Roll the dice to attempt scoring or get out">Roll Dice</button>
+    <button id="nextTurnBtn" class="next-btn" style="display:none;" aria-label="Proceed to next turn or show result">Next Turn</button>
+    <button id="restartBtn" class="restart-btn" aria-label="Restart the game">Restart Game</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  // Dice faces arrays
+  const RUNS_DIE_FACES = [1, 2, 3, 4, 6, 'OUT'];
+  const OUTCOME_DIE_FACES = ['Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Not Out'];
+
+  // Player avatars (public domain cricket icons)
+  const PLAYER_AVATARS = [
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Cricket_batsman_icon.svg/1024px-Cricket_batsman_icon.svg.png',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Cricket-bowler-icon.svg/1024px-Cricket-bowler-icon.svg.png',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Cricket-fielding-icon.svg/1024px-Cricket-fielding-icon.svg.png',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Cricket-wicket-icon.svg/1024px-Cricket-wicket-icon.svg.png',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Cricket-glove-icon.svg/1024px-Cricket-glove-icon.svg.png',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Cricket-ball-icon.svg/1024px-Cricket-ball-icon.svg.png'
+  ];
+
+  let matchMode = null;
+  let maxOvers = 20;
+  let maxWickets = 10;
+  let vsComputer = false;
+
+  let tossWinner = null;
+  let tossChoice = null;
+  let currentPlayer = 1;
+  let inningsNumber = 1;
+  let isGameOver = false;
+
+  let playerScores = {1:0,2:0};
+  let playerWickets = {1:0,2:0};
+  let playerOvers = {1:0,2:0};
+  let ballsThisOver = 0;
+
+  // Elements
+  const modeSelectionScreen = document.getElementById('modeSelectionScreen');
+  const tossScreen = document.getElementById('tossScreen');
+  const tossResultDisplay = document.getElementById('tossResult');
+  const tossChoiceArea = document.getElementById('tossChoice');
+  const batFirstBtn = document.getElementById('batFirstBtn');
+  const bowlFirstBtn = document.getElementById('bowlFirstBtn');
+
+  const gameContainer = document.getElementById('gameContainer');
+  const player1Box = document.getElementById('player1Box');
+  const player2Box = document.getElementById('player2Box');
+  const player1Avatar = document.getElementById('player1Avatar');
+  const player2Avatar = document.getElementById('player2Avatar');
+  const player1Title = document.getElementById('player1Title');
+  const player2Title = document.getElementById('player2Title');
+  const player1ScoreEl = document.getElementById('player1Score');
+  const player2ScoreEl = document.getElementById('player2Score');
+  const player1Info = document.getElementById('player1Info');
+  const player2Info = document.getElementById('player2Info');
+
+  const diceDisplay = document.getElementById('diceDisplay');
+  const gameLog = document.getElementById('gameLog');
+
+  const rollDiceBtn = document.getElementById('rollDiceBtn');
+  const nextTurnBtn = document.getElementById('nextTurnBtn');
+  const restartBtn = document.getElementById('restartBtn');
+
+  // AI batting flag & timer ref
+  let aiTimeout = null;
+  let aiBattingActive = false;
+  let tossDone = false;
+
+  function log(msg){
+    const t = new Date().toLocaleTimeString();
+    // Prepend logs
+    gameLog.textContent = `[${t}] ${msg}\n` + gameLog.textContent;
+  }
+
+  function rollDice(faces){
+    const idx = Math.floor(Math.random()*faces.length);
+    return faces[idx];
+  }
+
+  function assignAvatars(){
+    let shuffled = PLAYER_AVATARS.slice();
+    for(let i=shuffled.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+    }
+    player1Avatar.src=shuffled[0];
+    player1Avatar.alt="Player 1 avatar";
+    if(vsComputer){
+      player2Avatar.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';
+      player2Avatar.alt="Computer avatar";
+      player2Title.textContent="Computer";
+    }else{
+      player2Avatar.src=shuffled[1];
+      player2Avatar.alt="Player 2 avatar";
+      player2Title.textContent="Player 2";
+    }
+  }
+
+  function updateScoreboard(){
+    player1ScoreEl.textContent=playerScores[1];
+    player2ScoreEl.textContent=playerScores[2];
+    player1Info.textContent = `Wickets: ${playerWickets[1]} / ${maxWickets}  Overs: ${playerOvers[1]} / ${maxOvers}`;
+    player2Info.textContent = `Wickets: ${playerWickets[2]} / ${maxWickets}  Overs: ${playerOvers[2]} / ${maxOvers}`;
+  }
+
+  function disableRoll(disable){
+    rollDiceBtn.disabled=disable;
+  }
+
+  function setActivePlayer(num){
+    currentPlayer=num;
+    if(num===1){
+      player1Box.classList.add('active-player');
+      player2Box.classList.remove('active-player');
+      player1Title.textContent=`Player 1 (Batting)`;
+      player2Title.textContent=vsComputer?`Computer (Bowling)`:`Player 2 (Bowling)`;
+    }else{
+      player2Box.classList.add('active-player');
+      player1Box.classList.remove('active-player');
+      player2Title.textContent=vsComputer?`Computer (Batting)`:`Player 2 (Batting)`;
+      player1Title.textContent=`Player 1 (Bowling)`;
+    }
+  }
+
+  function resetGame(){
+    playerScores={1:0,2:0};
+    playerWickets={1:0,2:0};
+    playerOvers={1:0,2:0};
+    ballsThisOver=0;
+    inningsNumber=1;
+    isGameOver=false;
+    tossWinner=null;
+    tossChoice=null;
+    aiBattingActive=false;
+    if(aiTimeout) clearTimeout(aiTimeout);
+    tossDone=false;
+
+    diceDisplay.textContent=" Waiting for toss...";
+    gameLog.textContent=`Match mode: ${matchMode.toUpperCase()} selected.\nToss will start shortly...\n`;
+    rollDiceBtn.style.display="none";
+    nextTurnBtn.style.display="none";
+
+    assignAvatars();
+  }
+
+  function startToss(){
+    modeSelectionScreen.style.display="none";
+    tossScreen.style.display="flex";
+    tossChoiceArea.style.display="none";
+    tossResultDisplay.textContent=" Tossing the coin...";
+    tossWinner=null;
+    tossChoice=null;
+    tossDone=false;
+
+    setTimeout(()=>{
+      if(tossDone) return; // prevent multiple triggers
+      // Toss logic
+      const toss=Math.random()<0.5?'Heads':'Tails';
+      tossWinner=Math.random()<0.5?'player1':'player2';
+      let winnerName=tossWinner==='player1'?'Player 1':(vsComputer?'Computer':'Player 2');
+      tossResultDisplay.textContent=` ${toss} - ${winnerName} wins the toss!`;
+      log(`[Toss] ${winnerName} won the toss (${toss}).`);
+
+      if(tossWinner==='player2' && vsComputer){
+        // Computer picks randomly
+        tossChoice = Math.random()<0.5?'bat':'bowl';
+        log(`Computer chooses to ${tossChoice==='bat'?'bat':'bowl'} first.`);
+        tossChoiceArea.style.display="none";
+        setTimeout(finalizeToss,1000);
+      }else{
+        tossChoiceArea.style.display="flex";
+      }
+    },2000);
+  }
+
+  function finalizeToss(){
+    if(tossDone) return;
+    tossDone=true;
+    tossScreen.style.display="none";
+    gameContainer.style.display="flex";
+
+    // Set match parameters based on mode
+    if(matchMode==='test'){
+      maxOvers=90;
+      maxWickets=10;
+    }else if(matchMode==='odi'){
+      maxOvers=50;
+      maxWickets=10;
+    }else if(matchMode==='t20'){
+      maxOvers=20;
+      maxWickets=10;
+    }else if(matchMode==='oneWicket'){
+      maxOvers=20;
+      maxWickets=1;
+    }else if(matchMode==='computer'){
+      maxOvers=20;
+      maxWickets=10;
+    }
+
+    inningsNumber=1;
+    ballsThisOver=0;
+    playerScores={1:0,2:0};
+    playerWickets={1:0,2:0};
+    playerOvers={1:0,2:0};
+    isGameOver=false;
+    updateScoreboard();
+
+    // Determine first batting based on toss
+    let firstBatting;
+    if(tossChoice==='bat'){
+      firstBatting = tossWinner==='player1'?1:2;
+    }else{
+      firstBatting = tossWinner==='player1'?2:1;
+    }
+    setActivePlayer(firstBatting);
+
+    diceDisplay.textContent=" Roll Dice to start";
+    rollDiceBtn.style.display="inline-block";
+    disableRoll(false);
+
+    // Log start
+    log(`Match started: ${matchMode.toUpperCase()} mode.`);
+    log(`Innings ${inningsNumber} begins. ${currentPlayer===1?'Player 1':'Player 2' + (vsComputer && currentPlayer===2?' (Computer)':'')} batting.`);
+    
+    // If vsComputer and computer bats first, trigger AI batting automatically
+    if(vsComputer && currentPlayer===2){
+      disableRoll(true);
+      rollDiceBtn.style.display="none";
+      aiBattingTurn();
+    }
+  }
+
+  // Event handlers for toss choices
+  document.getElementById('batFirstBtn').addEventListener('click',()=>{
+    if(tossDone) return;
+    tossChoice='bat';
+    let winnerName=tossWinner==='player1'?'Player 1':(vsComputer?'Computer':'Player 2');
+    log(`${winnerName} chooses to bat first.`);
+    finalizeToss();
+  });
+  document.getElementById('bowlFirstBtn').addEventListener('click',()=>{
+    if(tossDone) return;
+    tossChoice='bowl';
+    let winnerName=tossWinner==='player1'?'Player 1':(vsComputer?'Computer':'Player 2');
+    log(`${winnerName} chooses to bowl first.`);
+    finalizeToss();
+  });
+
+  // Match mode selection
+  document.querySelectorAll('.game-mode-btn').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      matchMode=e.target.dataset.mode;
+      vsComputer = (matchMode==='computer');
+      if(vsComputer){
+        matchMode='computer';
+      }
+      resetGame();
+      startToss();
+    });
+  });
+
+  // Roll dice
+rollDiceBtn.addEventListener('click',()=>{
+  if(isGameOver) return;
+  // Disable button during roll
+  disableRoll(true);
+  rollDiceBtn.textContent="Rolling...";
+  diceDisplay.classList.add('rolling');
+
+  setTimeout(()=>{
+    diceDisplay.classList.remove('rolling');
+    const roll = rollDice(RUNS_DIE_FACES);
+    diceDisplay.textContent = roll==='OUT'?'OUT!':roll;
+
+    ballsThisOver++;
+    if(ballsThisOver===6){
+      ballsThisOver=0;
+      playerOvers[currentPlayer]++;
+    }
+
+    if(roll==='OUT'){
+      playerWickets[currentPlayer]++;
+      log(`Player ${currentPlayer===1?'1':(vsComputer && currentPlayer===2?'Computer':'2')} is OUT! Rolling dismissal type...`);
+
+      setTimeout(()=>{
+        const dismissal = rollDice(OUTCOME_DIE_FACES);
+        diceDisplay.textContent=`OUT! (${dismissal})`;
+        log(`Dismissal type: ${dismissal}`);
+        updateScoreboard();
+        playSound('out');
+
+        endTurnDueToOut();
+
+      },1200);
+    }else{
+      playerScores[currentPlayer]+=roll;
+      log(`Player ${currentPlayer===1?'1':(vsComputer && currentPlayer===2?'Computer':'2')} scored ${roll} runs.`);
+      updateScoreboard();
+
+      // Check end innings
+      if(playerOvers[currentPlayer]>=maxOvers || playerWickets[currentPlayer]>=maxWickets){
+        log(`Player ${currentPlayer===1?'1':(vsComputer && currentPlayer===2?'Computer':'2')} innings ended due to ${playerWickets[currentPlayer]>=maxWickets?'all out':'over limit'}.`);
+        endInnings();
+      }else{
+        disableRoll(false);
+        rollDiceBtn.textContent="Roll Dice";
+      }
+    }
+  },1800);
+});
+
+  // Next turn button
+nextTurnBtn.addEventListener('click',()=>{
+  nextTurnBtn.style.display="none";
+  rollDiceBtn.style.display="inline-block";
+  rollDiceBtn.textContent="Roll Dice";
+  disableRoll(false);
+
+  // If computer second innings, start AI batting automatically
+  if(vsComputer && currentPlayer===2 && inningsNumber===2 && !isGameOver){
+    // Delay slightly for UX
+    setTimeout(()=> {
+      aiBattingTurn();
+    },300);
+  }
+});
+
+// End turn due to wicket
+function endTurnDueToOut(){
+  updateScoreboard();
+  if(playerWickets[currentPlayer]>=maxWickets || playerOvers[currentPlayer]>=maxOvers){
+    log(`Player ${currentPlayer===1?'1':(vsComputer && currentPlayer===2?'Computer':'2')} innings ended.`);
+    endInnings();
+  }else{
+    // Show next turn
+    rollDiceBtn.style.display="none";
+    nextTurnBtn.style.display="inline-block";
+    nextTurnBtn.textContent='Next Ball / Turn';
+  }
+}
+
+// End innings and switch sides or end game
+function endInnings(){
+  inningsNumber++;
+  ballsThisOver=0;
+  if(inningsNumber>2){
+    endGame();
+    return;
+  }
+  // Switch batting
+  currentPlayer = currentPlayer===1?2:1;
+  updatePlayerBattingStatus();
+  updateScoreboard();
+  // Disable roll until start
+  rollDiceBtn.style.display="none";
+  disableRoll(true);
+  // Log start
+  log(`Innings ${inningsNumber} begins: Player ${currentPlayer===1?'1':(vsComputer && currentPlayer===2?'Computer':'2')} batting.`);
+
+  nextTurnBtn.style.display="inline-block";
+  nextTurnBtn.textContent = `Start Innings ${inningsNumber}`;
+
+  // If computer bats second innings, start AI automatically
+  if(vsComputer && currentPlayer===2 && inningsNumber===2){
+    nextTurnBtn.removeEventListener('click', aiBattingTurnOnce);
+    nextTurnBtn.addEventListener('click', ()=> {
+      nextTurnBtn.style.display="none";
+      aiBattingTurn();
+    }, {once:true});
+  }
+}
+
+// Update UI labels
+function updatePlayerBattingStatus(){
+  if(currentPlayer===1){
+    player1Box.classList.add('active-player');
+    player2Box.classList.remove('active-player');
+    player1Title.textContent="Player 1 (Batting)";
+    player2Title.textContent=vsComputer?"Computer (Bowling)":"Player 2 (Bowling)";
+  }else{
+    player2Box.classList.add('active-player');
+    player1Box.classList.remove('active-player');
+    player2Title.textContent=vsComputer?"Computer (Batting)":"Player 2 (Batting)";
+    player1Title.textContent="Player 1 (Bowling)";
+  }
+}
+
+// End game
+function endGame(){
+  isGameOver=true;
+  // Clear AI timeout if any
+  if(aiTimeout) clearTimeout(aiTimeout);
+  aiBattingActive=false;
+
+  rollDiceBtn.style.display="none";
+  nextTurnBtn.style.display="none";
+
+  let winnerMessage;
+  if(playerScores[1]>playerScores[2]){
+    winnerMessage = "Player 1 wins! ";
+  }else if(playerScores[1]<playerScores[2]){
+    winnerMessage = vsComputer?"Computer wins! ":"Player 2 wins! ";
+  }else{
+    winnerMessage = "It's a tie! ";
+  }
+  diceDisplay.textContent=winnerMessage;
+  log("Match over! " + winnerMessage);
+  playSound('end');
+}
+
+// Reset game
+document.getElementById('restartBtn').addEventListener('click',()=>{
+  if(aiTimeout) clearTimeout(aiTimeout);
+  aiBattingActive=false;
+  matchMode=null;
+  tossDone=false;
+  isGameOver=false;
+
+  playerScores={1:0,2:0};
+  playerWickets={1:0,2:0};
+  playerOvers={1:0,2:0};
+  inningsNumber=1;
+  ballsThisOver=0;
+  tossWinner=null;
+  tossChoice=null;
+
+  diceDisplay.textContent="";
+  gameLog.textContent="";
+  rollDiceBtn.style.display="inline-block";
+  nextTurnBtn.style.display="none";
+
+  tossScreen.style.display="none";
+  gameContainer.style.display="none";
+  modeSelectionScreen.style.display="flex";
+
+  assignAvatars();
+});
+
+// AI batting function
+function aiBattingTurn(){
+  if(isGameOver || !aiBattingActive || currentPlayer!==2) return;
+  aiBattingActive=true;
+  disableRoll(true);
+  rollDiceBtn.style.display="none";
+
+  log("Computer batting...");
+
+  function aiRoll(){
+    if(isGameOver || !aiBattingActive || currentPlayer!==2) {
+      aiBattingActive=false;
+      return;
+    }
+    diceDisplay.classList.add('rolling');
+
+    setTimeout(()=>{
+      if(isGameOver || !aiBattingActive || currentPlayer!==2) {
+        diceDisplay.classList.remove('rolling');
+        aiBattingActive=false;
+        return;
+      }
+      const roll=rollDice(RUNS_DIE_FACES);
+      diceDisplay.textContent=roll==='OUT'?'OUT!':roll;
+
+      ballsThisOver++;
+      if(ballsThisOver===6){
+        ballsThisOver=0;
+        playerOvers[2]++;
+      }
+
+      if(roll==='OUT'){
+        playerWickets[2]++;
+        log(`Computer is OUT! Rolling dismissal...`);
+        setTimeout(()=>{
+          if(isGameOver || !aiBattingActive || currentPlayer!==2) {
+            diceDisplay.classList.remove('rolling');
+            aiBattingActive=false;
+            return;
+          }
+          const dismissal=rollDice(OUTCOME_DIE_FACES);
+          diceDisplay.textContent=`OUT! (${dismissal})`;
+          log(`Dismissal type: ${dismissal}`);
+          updateScoreboard();
+          playSound('out');
+
+          // End turn
+          aiBattingActive=false;
+          endTurnDueToOut();
+
+        },1200);
+        return;
+      }else{
+        playerScores[2]+=roll;
+        log(`Computer scored ${roll} runs.`);
+        updateScoreboard();
+        playSound('run');
+
+        // Check if computer wins in 2nd innings
+        if(inningsNumber===2 && playerScores[2]>playerScores[1]){
+          // End AI batting, declare winner
+          aiBattingActive=false;
+          endGame();
+          return;
+        }
+
+        // Check innings end
+        if(playerOvers[2]>=maxOvers || playerWickets[2]>=maxWickets){
+          aiBattingActive=false;
+          log(`Computer innings ended.`);
+          endInnings();
+          return;
+        }
+
+        // Continue rolling
+        aiTimeout=setTimeout(aiRoll,1300);
+      }
+    },1500);
+  }
+  aiRoll();
+}
+
+// Utility to play sounds (if desired)
+function playSound(type){
+  // Optional: add sound effects
+}
+
+assignAvatars();
+
+})();
+</script>
+
+<footer class="footer" role="contentinfo" style="margin-top: 40px; font-style: italic; color: #0099aa; text-align: center; user-select: text;">
+  Designed and coded with  by <strong>Lapis Yam</strong><br/>
+  Inspired by the classic <a href="https://www.playonlinedicegames.com/owzthat" target="_blank" rel="noopener noreferrer" style="color:#00ffff; text-decoration:none;">Owzthat Dice Cricket Game</a>.
+</footer>
+</body>
+</html>
